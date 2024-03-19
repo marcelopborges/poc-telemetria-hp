@@ -3,4 +3,5 @@
 .venv
 postgres/
 docker-compose.yml
+notebooks/dados/
 
