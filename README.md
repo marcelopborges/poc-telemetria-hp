@@ -13,13 +13,12 @@
 * Análise e processamento de dados.
 * Desenvolvimento de dashboards para visualização de insights.
 ## 2. Objetivos da POC
-> Demonstrar o potencial de impacto da telemetria no:
-* Aumento da eficiência operacional.
+> Demonstrar o potencial de impacto da telemetria no Aumento da eficiência operacional.
 ## 3. Tecnologias Utilizadas
 * API de Telemetria: Descrição da API e como os dados serão coletados.
-* Banco de Dados Temporário: Ferramenta escolhida para o armazenamento de dados (ex.: MongoDB, AWS RDS).
-* Ferramentas de ETL: Tecnologias utilizadas para o processamento dos dados (ex.: Apache NiFi, Python).
-* Plataforma de Dashboard: Ferramenta utilizada para a criação dos dashboards (ex.: Power BI, Tableau).
+* Banco de Dados Temporário: PostgreSQL.
+* Ferramentas de ETL: Airflow e Airbyte.
+* Plataforma de Dashboard: Power BI.
 ## 4. Arquitetura da Solução
 > Diagrama da arquitetura da POC, incluindo a coleta de dados, processamento, armazenamento e visualização.
 
