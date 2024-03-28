@@ -101,7 +101,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -134,9 +133,9 @@ dmypy.json
 cython_debug/
 
 # dotenv environment variables file
-.env
+airbyte/.env
 # personal exclusions
 postgres/
 docker-compose.yml
-notebooks/dados/
+airflow/dags/data/
 
