@@ -137,5 +137,5 @@ airbyte/.env
 # personal exclusions
 postgres/
 docker-compose.yml
-airflow/dags/data/
+notebooks/data/
 

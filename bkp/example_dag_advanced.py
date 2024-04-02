@@ -15,10 +15,10 @@ from airflow.operators.empty import EmptyOperator
 from airflow.operators.weekday import BranchDayOfWeekOperator
 
 # Used to label node edges in the Airflow UI
-from airflow.utils.edgemodifier import Label
+from airflow.dags.utils import Label
 
 # Used to determine the day of the week
-from airflow.utils.weekday import WeekDay
+from airflow.dags.utils import WeekDay
 
 
 """

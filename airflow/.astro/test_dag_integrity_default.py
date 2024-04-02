@@ -8,7 +8,7 @@ import pytest
 
 from airflow.models import DagBag, Variable, Connection
 from airflow.hooks.base import BaseHook
-from airflow.utils.db import initdb
+from airflow.dags.utils import initdb
 
 # init airflow database
 initdb()
