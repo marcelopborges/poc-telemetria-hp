@@ -2,14 +2,18 @@
 ## Pré-requisitos
 Todos os comandos listados abaixo devem ser executados na raiz do projeto.
 A versão do python que está sendo utilizada é a 3.10, postgres 16.2 (docker) e Airflow (2.8.3+astro.1)
-O sistema operacional utilizado foi Ubuntu 14
+O sistema operacional utilizado foi Ubuntu 23.10
 
 ## Postgres
 Acessar a pasta postgres na raiz do projeto e executar o docker-compose ``` docker-compose up ```
 
+
 ## Poetry
-`poetry install` comando necessário para instalar as dependências do projeto
-`poetry shell` comando necessário para ativar o ambiente virtual do projeto
+- `poetry install` comando necessário para instalar as dependências do projeto.
+- `poetry shell` comando necessário para ativar o ambiente virtual do projeto.
+ 
+_**Para maiores informações, leia a documentação: https://python-poetry.org/docs/**_
+
 
 ## Airflow
 - Comando necessário para iniciar o ambiente do Airflow `astro dev start`
@@ -27,6 +31,8 @@ docker network connect data_network airflow_1b8929-triggerer-1
 docker network connect data_network airflow_1b8929-scheduler-1
 docker network connect data_network airflow_1b8929-postgres-1
 ```
+
+**_Para maiores informações, leia a documentação do Airflow: https://airflow.apache.org/docs/_**
 # Preparação do ambiente
 ## Conexão com o Banco de dados
 Os dados de conexão com o banco de dados não está hard coded e é gerenciado pelo Airflow, garantir que a variável de conexão
