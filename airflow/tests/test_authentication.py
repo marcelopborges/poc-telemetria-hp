@@ -1,7 +1,7 @@
 # from datetime import datetime, timedelta
 # from requests import request
 # import requests_mock
-# from airflow.dags.utils.connections import get_token_bearer, get_data
+# from airflow.dags.utils.connections import get_token_bearer_mix, get_data
 #
 #
 # def test_get_token_bearer():
@@ -11,7 +11,7 @@
 #         token_bearer = "token_mockado"
 #         m.post(url_auth, json={"access_token": token_bearer})
 #
-#         token = get_token_bearer(url_auth, credentials)
+#         token = get_token_bearer_mix(url_auth, credentials)
 #         assert token == token_bearer
 #
 #
@@ -28,7 +28,7 @@
 #
 # def test_get_geodata(url_base):
 #     url_base = "https://integrate.us.mixtelematics.com/api/geodata/assetmovements/-8537705117441354628/"
-#     token = get_token_bearer()
+#     token = get_token_bearer_mix()
 #     payload = {}
 #     headers = {
 #         'Authorization': f'Bearer {token}'
