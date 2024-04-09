@@ -12,6 +12,7 @@
 * Armazenamento temporário de dados.
 * Análise e processamento de dados.
 * Desenvolvimento de dashboards para visualização de insights.
+* Criar documentação.
 ## 2. Objetivos da POC
 > Demonstrar o potencial de impacto da telemetria no Aumento da eficiência operacional.
 > Como primeiro teste, iremos ler os dados do endpoint (GEODATA) que possui os dados de geolocalização de todos os carros
