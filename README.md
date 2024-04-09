@@ -24,7 +24,7 @@
 * Ferramentas de ETL: Airflow e DBT.
 * Plataforma de Dashboard: Power BI.
 ## 4. Arquitetura da Solução
-> Diagrama da arquitetura da POC, incluindo a coleta de dados, processamento, armazenamento e visualização.
+![img.png](img.png)
 
 ## 5. Implementação
 ### 5.1 Coleta de Dados
