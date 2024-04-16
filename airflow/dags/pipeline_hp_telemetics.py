@@ -22,10 +22,6 @@ token_data = {
 }
 
 
-def mark_start(**context):
-    context['ti'].xcom_push(key='start_time', value=datetime.now())
-
-
 def get_token_bearer():
     """
 
@@ -36,6 +32,10 @@ def get_token_bearer():
     if token_data["token"] is not None and (datetime.now() - token_data["timestamp"]) < timedelta(seconds=3600):
         return token_data["token"]
     else:
+        print(url_identity)
+        print(username_access_identity_mix)
+        print(password_access_identity_mix)
+        print(auth_token_basic_mix_identity)
         url = f"{url_identity}"
         payload = {
             'grant_type': 'password',
@@ -76,7 +76,8 @@ def get_geodata(**kwargs):
             time_to_wait = min_interval - elapsed_time
             time.sleep(time_to_wait)
     last_call_timestamp = time.time()
-    execution_date = kwargs['execution_date']
+    execution_date = kwargs['logical_date']
+    # execution_date = kwargs['execution_date']
     execution_date = execution_date - timedelta(days=1)  # requisição D-1
     formatted_date = execution_date.strftime("%Y%m%d")
     url_stream = f"https://integrate.us.mixtelematics.com/api/geodata/assetmovements/{id_hp_mix}/{formatted_date}000000/{formatted_date}235959"
@@ -94,7 +95,8 @@ def process_and_load_geodata_to_postgres(**kwargs):
     e precisa ser em tempo de execução.
 
     """
-    execution_date = kwargs['execution_date']
+    execution_date = kwargs['logical_date']
+    # execution_date = kwargs['execution_date']
     geodata_json = kwargs['ti'].xcom_pull(task_ids='get_geodata')
     data = json.loads(geodata_json)
     execution_date = execution_date - timedelta(days=1)
@@ -106,7 +108,7 @@ def process_and_load_geodata_to_postgres(**kwargs):
     cursor = connection.cursor()
 
     insert_query = """
-    INSERT INTO hp.geodata (registration, description, geometry_type, coordinates, execution_date, hash)
+    INSERT INTO hp.raw_geodata (registration, description, geometry_type, coordinates, execution_date, hash)
     VALUES (%s, %s, %s, %s, %s, %s)
     ON CONFLICT (hash) DO NOTHING
     """
@@ -142,7 +144,7 @@ def insert_data_into_postgres(data):
     """
     pg_hook = PostgresHook(postgres_conn_id='postgres_con_id')
     insert_query = """
-    INSERT INTO hp.geodata (registration, description, geometry_type, coordinates, execution_date)
+    INSERT INTO hp.raw_geodata (registration, description, geometry_type, coordinates, execution_date)
     VALUES (%s, %s, %s, %s, %s)
     """
     connection = pg_hook.get_conn()
@@ -159,28 +161,22 @@ def insert_data_into_postgres(data):
 
 
 def insert_dag_metadata(**kwargs):
-    """
+    ti = kwargs['ti']
+    start_time = ti.xcom_pull(key='start_time', task_ids='mark_start')
+    end_time = ti.xcom_pull(key='end_time', task_ids='mark_end')
 
-    Função para criar alguns metadados em tempo de execução.
+    if not start_time or not end_time:
+        error_msg = f"Start time or end time not set correctly. Start: {start_time}, End: {end_time}"
+        print(error_msg)
+        raise ValueError(error_msg)
 
-    """
-    start_time = kwargs['ti'].xcom_pull(key='start_time')
-    end_time = datetime.now()
     duration = (end_time - start_time).total_seconds()
+
     pg_hook = PostgresHook(postgres_conn_id='postgres_con_id')
     conn = pg_hook.get_conn()
     cursor = conn.cursor()
     dag_id = kwargs['dag_run'].dag_id
     execution_date = kwargs['ds']
-    start_date = kwargs.get('start_date', datetime.now(pytz.utc))
-    end_date = kwargs.get('end_date', datetime.now(pytz.utc))
-
-    if start_date.tzinfo is None or start_date.tzinfo.utcoffset(start_date) is None:
-        start_date = pytz.utc.localize(start_date)
-    if end_date.tzinfo is None or end_date.tzinfo.utcoffset(end_date) is None:
-        end_date = pytz.utc.localize(end_date)
-
-    duration = (end_date - start_date).total_seconds()
 
     success = True
     error_message = None
@@ -189,11 +185,21 @@ def insert_dag_metadata(**kwargs):
     INSERT INTO hp.pipeline_metadata (dag_id, execution_date, start_date, end_date, duration, success, error_message)
     VALUES (%s, %s, %s, %s, %s, %s, %s);
     """
-
-    cursor.execute(insert_query, (dag_id, execution_date, start_date, end_date, duration, success, error_message))
+    cursor.execute(insert_query, (dag_id, execution_date, start_time, end_time, duration, success, error_message))
     conn.commit()
     cursor.close()
     conn.close()
+
+
+def mark_start(**context):
+    start = datetime.now()
+    context['ti'].xcom_push(key='start_time', value=start)
+    print(f"Mark start at {start}")
+
+def mark_end(**context):
+    end = datetime.now()
+    context['ti'].xcom_push(key='end_time', value=end)
+    print(f"Mark end at {end}")
 
 
 """
@@ -206,11 +212,12 @@ Está configurada para realizar 3 tentativas em caso de algum erro sendo atribui
 """
 
 
-@dag(start_date=datetime(2024, 2, 26), schedule='30 12 * * MON-FRI', catchup=True,
+@dag(start_date=datetime(2024, 2, 26), schedule='00 14 * * *', catchup=True,
      tags=['airbyte', 'HP', 'Mix-Telematics'])
 def pipeline_hp_telemetics():
     """
     DAG personalizada para extrair dados da API Mix-Telematics
+
     """
 
     start = EmptyOperator(task_id='start')
@@ -223,7 +230,9 @@ def pipeline_hp_telemetics():
 
     get_bearer_token = PythonOperator(
         task_id='get_bearer_token',
-        python_callable=get_token_bearer
+        python_callable=get_token_bearer,
+        retries=5,
+        retry_delay=timedelta(minutes=5)
     )
 
     get_data = PythonOperator(
@@ -237,18 +246,27 @@ def pipeline_hp_telemetics():
     process_data = PythonOperator(
         task_id='process_data',
         python_callable=process_and_load_geodata_to_postgres,
-        provide_context=True
+        provide_context=True,
+        retries=5,
+        retry_delay=timedelta(minutes=5)
     )
 
     create_metadata = PythonOperator(
         task_id='create_metadata',
         python_callable=insert_dag_metadata,
-        provide_context=True
+        provide_context=True,
+        retries=5,
+        retry_delay=timedelta(minutes=5)
     )
-
+    end_task = PythonOperator(
+        task_id='mark_end',
+        python_callable=mark_end,
+        provide_context=True,
+    )
     end = EmptyOperator(task_id='end')
 
-    start >> start_task >> get_bearer_token >> get_data >> process_data >> create_metadata >> end
+    # Adicione a nova tarefa no fluxo da DAG
+    start >> start_task >> get_bearer_token >> get_data >> process_data >> end_task >> create_metadata >> end
 
 
 dag = pipeline_hp_telemetics()

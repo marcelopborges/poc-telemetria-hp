@@ -38,7 +38,7 @@ def get_token_sianet():
     if token_data["token"] is not None and (datetime.now() - token_data["timestamp"]) < timedelta(seconds=1800):
         return token_data["token"]
     else:
-        url = f"{auth_token_basic_sianet}"
+        url = f"{url_api_sianet}"
         payload = {}
         headers = {
             'Authorization': f'Basic {auth_token_basic_sianet}'
@@ -66,7 +66,7 @@ def get_data_line_sianet():
         raise Exception(f"Failed to get geodata: HTTP {response.status_code}")
 
 
-def insert_line_data(**kwargs):
+def insert_line_data_schedule(**kwargs):
     """
 
     Função responsável para inserir os dados no banco de dados.
@@ -84,7 +84,7 @@ def insert_line_data(**kwargs):
             linha = v['linha']['numLinha']
             descricao = v['linha']['descricao']
             insert_linha_sql = """
-            INSERT INTO hp.linhas (num_linha, descricao)
+            INSERT INTO hp.raw_linhas (num_linha, descricao)
             VALUES (%s, %s)
             ON CONFLICT (num_linha) DO NOTHING
             RETURNING id;
@@ -102,7 +102,7 @@ def insert_line_data(**kwargs):
                 if pontos_trajeto:  # Verifica se a lista de pontos não está vazia
                     pontos_geolocalizacao_json = json.dumps(pontos_trajeto)
                     insert_trajeto_sql = """
-                    INSERT INTO hp.trajetos (linha_id, direcao, pontos_geolocalizacao)
+                    INSERT INTO hp.raw_trajetos (linha_id, direcao, pontos_geolocalizacao)
                     VALUES (%s, %s, %s)
                     ON CONFLICT (linha_id, direcao) DO UPDATE SET pontos_geolocalizacao = EXCLUDED.pontos_geolocalizacao;
                     """
@@ -116,8 +116,47 @@ def insert_line_data(**kwargs):
         connection.close()
 
 
+def insert_dag_metadata_dados_linha(**kwargs):
+    ti = kwargs['ti']
+    start_time = ti.xcom_pull(key='start_time', task_ids='mark_start')
+    end_time = ti.xcom_pull(key='end_time', task_ids='mark_end')
+
+    if not start_time or not end_time:
+        error_msg = f"Start time or end time not set correctly. Start: {start_time}, End: {end_time}"
+        print(error_msg)
+        raise ValueError(error_msg)
+
+    duration = (end_time - start_time).total_seconds()
+
+    pg_hook = PostgresHook(postgres_conn_id='postgres_con_id')
+    conn = pg_hook.get_conn()
+    cursor = conn.cursor()
+    dag_id = kwargs['dag_run'].dag_id
+    execution_date = kwargs['ds']
+
+    success = True
+    error_message = None
+
+    insert_query = """
+    INSERT INTO hp.pipeline_metadata (dag_id, execution_date, start_date, end_date, duration, success, error_message)
+    VALUES (%s, %s, %s, %s, %s, %s, %s);
+    """
+    cursor.execute(insert_query, (dag_id, execution_date, start_time, end_time, duration, success, error_message))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
 def mark_start(**context):
-    context['ti'].xcom_push(key='start_time', value=datetime.now())
+    start = datetime.now()
+    context['ti'].xcom_push(key='start_time', value=start)
+    print(f"Mark start at {start}")
+
+
+def mark_end(**context):
+    end = datetime.now()
+    context['ti'].xcom_push(key='end_time', value=end)
+    print(f"Mark end at {end}")
 
 
 """
@@ -128,7 +167,7 @@ Esta DAG foi desenvolvida para ser executada de forma manual, devido o seu taman
 
 
 @dag(start_date=datetime(2024, 4, 5), schedule=None, catchup=False,
-     tags=['airbyte', 'HP', 'Sianet'])
+     tags=['airbyte', 'HP', 'Sianet', 'Escala'])
 def pipeline_hp_sianet():
     """
 
@@ -159,16 +198,28 @@ def pipeline_hp_sianet():
 
     insert_line = PythonOperator(
         task_id='insert_line_data',
-        python_callable=insert_line_data,
+        python_callable=insert_line_data_schedule,
         provide_context=True,
         op_kwargs={'linha_data_json': "{{ ti.xcom_pull(task_ids='get_data_line') }}"},
         retries=5,
         retry_delay=timedelta(minutes=5),
     )
 
+    create_metadata_data_line = PythonOperator(
+        task_id='create_metadata_data_line',
+        python_callable=insert_dag_metadata_dados_linha,
+        provide_context=True,
+        retries=5,
+        retry_delay=timedelta(minutes=5)
+    )
+    end_task = PythonOperator(
+        task_id='mark_end',
+        python_callable=mark_end,
+        provide_context=True,
+    )
     end = EmptyOperator(task_id='end')
 
-    start >> start_task >> get_token >> get_data_line >> insert_line >> end
+    start >> start_task >> get_token >> get_data_line >> insert_line >> end_task >> create_metadata_data_line >> end
 
 
 dag = pipeline_hp_sianet()

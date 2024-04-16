@@ -24,7 +24,7 @@
 * Ferramentas de ETL: Airflow e DBT.
 * Plataforma de Dashboard: Power BI.
 ## 4. Arquitetura da Solução
-![img.png](img.png)
+![img.png](src/diagram.png)
 
 ## 5. Implementação
 ### 5.1 Coleta de Dados

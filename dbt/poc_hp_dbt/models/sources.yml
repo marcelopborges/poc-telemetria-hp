@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: hp
+    tables:
+      - name: raw_linhas
+        description: "Raw geolocation data loaded directly from external systems."
+      - name: raw_trajetos
+        description: "Raw geolocation data loaded directly from external systems."
+      - name: raw_escalas_programadas
+        description: "Raw geolocation data loaded directly from external systems."
+      - name: raw_geodata
+        description: "Raw geolocation data loaded directly from external systems."

@@ -1,0 +1,16 @@
+#version: 2
+#
+#models:
+#  - name: geodata_cleaned
+#    description: "Cleaned geolocation data."
+#    columns:
+#      - name: id
+#        description: "Unique identifier for each geolocation entry."
+#        tests:
+#          - unique
+#          - not_null
+#      - name: latitude
+#        tests:
+#          - not_null
+#          - accepted_values:
+#              values: ['N', 'S', 'E', 'W']

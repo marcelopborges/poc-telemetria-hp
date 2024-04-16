@@ -1,8 +1,7 @@
 WITH features AS (
 SELECT
     jsonb_array_elements(features) as feature
-FROM
-    geodata
+FROM {{source()}}
 )
 SELECT
   feature->'properties'->>'Description' AS description,
