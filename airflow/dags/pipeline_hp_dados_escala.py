@@ -167,7 +167,7 @@ def mark_end(**context):
 #
 # """
 
-@dag(start_date=datetime(2024, 2, 26), schedule='00 11 * * *', catchup=True,
+@dag(start_date=datetime(2024, 2, 26), schedule='55 11 * * *', catchup=True,
      tags=['airbyte', 'HP', 'Sianet'])
 def pipeline_hp_sianet_scheduler():
     start = EmptyOperator(task_id='start')
@@ -175,28 +175,36 @@ def pipeline_hp_sianet_scheduler():
         task_id='mark_start',
         python_callable=mark_start,
         provide_context=True,
+        retries=5,
+        retry_delay=timedelta(minutes=10),
     )
     get_token = PythonOperator(
         task_id='get_token',
         python_callable=get_token_sianet,
         provide_context=True,
+        retries=5,
+        retry_delay=timedelta(minutes=10),
     )
     get_data_line = PythonOperator(
         task_id='get_data_line',
         python_callable=get_data_trip_made_sianet,
         provide_context=True,
+        retries=5,
+        retry_delay=timedelta(minutes=10),
     )
     end_task = PythonOperator(
         task_id='mark_end',
         python_callable=mark_end,
         provide_context=True,
+        retries=5,
+        retry_delay=timedelta(minutes=10),
     )
     create_metadata_schedule = PythonOperator(
         task_id='create_metadata_data_schedule',
         python_callable=insert_dag_metadata_schedule,
         provide_context=True,
         retries=5,
-        retry_delay=timedelta(minutes=5)
+        retry_delay=timedelta(minutes=10)
     )
     end = EmptyOperator(task_id='end')
 
