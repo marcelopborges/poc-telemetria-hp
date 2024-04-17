@@ -31,13 +31,32 @@ def generate_hash(*args):
     return hashlib.sha256(hash_input.encode('utf-8')).hexdigest()
 
 
-def convert_datetime(date_str):
+def convert_datetime_with_time(date_str):
+    """
+    Converte uma string de data e hora do formato 'DD/MM/YYYY HH:MM' para o formato 'YYYY-MM-DD HH:MM'.
+    Retorna None se a entrada for None ou se a conversão falhar.
+    """
+    if date_str is None:
+        return None
     try:
-        # Tenta converter de 'DD/MM/YYYY HH:MM' para 'YYYY-MM-DD HH:MM:SS'
-        return datetime.strptime(date_str, '%d/%m/%Y %H:%M').strftime('%Y-%m-%d %H:%M:%S')
+        return datetime.strptime(date_str, '%d/%m/%Y %H:%M').strftime('%Y-%m-%d %H:%M')
     except ValueError:
-        # Se falhar porque não tem hora, tenta apenas com a data
+        logging.error(f"Data e hora fornecida inválida: {date_str}")
+        return None
+
+def convert_datetime_without_time(date_str):
+    """
+    Converte uma string de data do formato 'DD/MM/YYYY' para o formato 'YYYY-MM-DD'.
+    Retorna None se a entrada for None ou se a conversão falhar.
+    """
+    if date_str is None:
+        return None
+    try:
         return datetime.strptime(date_str, '%d/%m/%Y').strftime('%Y-%m-%d')
+    except ValueError:
+        logging.error(f"Data fornecida inválida: {date_str}")
+        return None
+
 
 
 def get_token_sianet():
@@ -65,7 +84,7 @@ def get_token_sianet():
 
 def get_data_trip_made_sianet(**kwargs):
     logical_date = kwargs['logical_date']
-    logical_date = logical_date - timedelta(days=10)  # D-10
+    logical_date = logical_date - timedelta(days=1)  # D-10
     formatted_date = logical_date.strftime("%d/%m/%Y")
 
     url = f"http://siannet.gestaosian.com/api/ConsultaViagens?data={formatted_date}&viagens=programadas"
@@ -97,24 +116,24 @@ def insert_data_into_postgres(data):
     for entry in data:
         try:
             row = (
-                convert_datetime(entry.get('DATA')),
+                convert_datetime_without_time(entry.get('DATA')),
                 entry.get('LINHA'),
                 entry.get('CARRO'),
                 entry.get('RE'),
                 entry.get('NOME'),
-                convert_datetime(entry.get('DTHR_SAIDA')),
-                convert_datetime(entry.get('DTHR_RETORNO')),
-                convert_datetime(entry.get('DTHR_CHEGADA')) if entry.get('DTHR_CHEGADA') else None
+                convert_datetime_with_time(entry.get('DTHR_SAIDA')) if entry.get('DTHR_SAIDA') else None,
+                convert_datetime_with_time(entry.get('DTHR_RETORNO')) if entry.get('DTHR_RETORNO') else None,
+                convert_datetime_with_time(entry.get('DTHR_CHEGADA')) if entry.get('DTHR_CHEGADA') else None
             )
             rows_to_insert.append(row)
         except Exception as e:
-            # Log the error and skip this row
-            print(f"Error processing row {entry}: {e}")
+            logging.error(f"Error processing row {entry}: {e}")
 
     cursor.executemany(insert_query, rows_to_insert)
     conn.commit()
     cursor.close()
     conn.close()
+
 
 
 def insert_dag_metadata_schedule(**kwargs):
@@ -167,7 +186,7 @@ def mark_end(**context):
 #
 # """
 
-@dag(start_date=datetime(2024, 2, 26), schedule='00 11 * * *', catchup=True,
+@dag(start_date=datetime(2024, 2, 26), schedule='30 11 * * *', catchup=True,
      tags=['airbyte', 'HP', 'Sianet'])
 def pipeline_hp_sianet_scheduler():
     start = EmptyOperator(task_id='start')
@@ -175,21 +194,29 @@ def pipeline_hp_sianet_scheduler():
         task_id='mark_start',
         python_callable=mark_start,
         provide_context=True,
+        retries=5,
+        retry_delay=timedelta(minutes=5)
     )
     get_token = PythonOperator(
         task_id='get_token',
         python_callable=get_token_sianet,
         provide_context=True,
+        retries=5,
+        retry_delay=timedelta(minutes=5)
     )
     get_data_line = PythonOperator(
         task_id='get_data_line',
         python_callable=get_data_trip_made_sianet,
         provide_context=True,
+        retries=5,
+        retry_delay=timedelta(minutes=5)
     )
     end_task = PythonOperator(
         task_id='mark_end',
         python_callable=mark_end,
         provide_context=True,
+        retries=5,
+        retry_delay=timedelta(minutes=5)
     )
     create_metadata_schedule = PythonOperator(
         task_id='create_metadata_data_schedule',
