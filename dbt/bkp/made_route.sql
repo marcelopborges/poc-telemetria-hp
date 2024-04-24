@@ -1,0 +1,6 @@
+-- SELECT
+-- execution_date
+-- ,registration
+-- ,description as carro
+-- ,coordinates as made_trip
+-- FROM {{ source('hp', 'raw_geodata') }}
