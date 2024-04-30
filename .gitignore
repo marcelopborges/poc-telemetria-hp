@@ -138,4 +138,6 @@ airbyte/.env
 postgres/
 docker-compose.yml
 notebooks/data/
+notebooks/*.html
+
 

@@ -1,0 +1,11 @@
+-- SELECT
+--     id
+--      , "data" as execution_date
+--      , linha
+--      , carro
+--      , re
+--      , nome
+--      , dthr_saida
+--      , dthr_retorno
+--      , dthr_chegada
+-- FROM {{ source('hp', 'raw_escalas_programadas')}}

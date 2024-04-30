@@ -1,0 +1,31 @@
+-- {{ config(materialized='view') }}
+--
+-- SELECT
+--   so.execution_date,
+--   so.linha,
+--   so.carro,
+--   so.re,
+--   so.nome,
+--   ir.direcao,
+--   ir.idle_route,
+--   ir.num_linha,
+--   ir.descricao,
+--   mr.execution_date AS mr_execution_date,
+--   mr.carro AS mr_carro,
+--   jsonb_agg(
+--     jsonb_build_object(
+--       'lat', (coords->>0)::numeric,
+--       'lng', (coords->>1)::numeric
+--     )
+--   ) AS made_trip_standardized
+-- FROM {{ ref('schedule_operation') }} AS so
+-- JOIN {{ ref('idle_route') }} AS ir ON so.linha = ir.num_linha
+-- JOIN LATERAL (
+--   SELECT
+--     execution_date,
+--     carro,
+--     jsonb_array_elements(made_trip::jsonb) AS coords
+--   FROM {{ ref('made_route') }}
+--   WHERE made_route.execution_date = so.execution_date AND made_route.carro = CAST(so.carro AS VARCHAR)
+-- ) mr ON TRUE
+-- GROUP BY so.execution_date, so.linha, so.carro, so.re, so.nome, ir.direcao, ir.idle_route, ir.num_linha, ir.descricao, mr_execution_date, mr_carro

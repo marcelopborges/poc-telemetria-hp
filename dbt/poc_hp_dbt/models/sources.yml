@@ -4,10 +4,11 @@ sources:
   - name: hp
     tables:
       - name: raw_linhas
-        description: "Raw geolocation data loaded directly from external systems."
+        description: "Tabela contendo todos os dados descritivos das linhas"
       - name: raw_trajetos
-        description: "Raw geolocation data loaded directly from external systems."
+        description: "Tabela contendo os dados de geolocalização das linhas, fazendo referência a tabela raw_linhas"
       - name: raw_escalas_programadas
-        description: "Raw geolocation data loaded directly from external systems."
+        description: "Tabela contendo informações originadas das papeletas, com informações de carro, motorista e linha, todas programadas"
       - name: raw_geodata
-        description: "Raw geolocation data loaded directly from external systems."
+        description: "Dados de geolocalização que tem origem na Mix Telematics."
+

@@ -1,3 +1,4 @@
+import logging
 import time
 import pytz
 from airflow.models import Variable
@@ -79,7 +80,9 @@ def get_geodata(**kwargs):
     execution_date = kwargs['logical_date']
     # execution_date = kwargs['execution_date']
     execution_date = execution_date - timedelta(days=1)  # requisição D-1
+    logging.info(f"Execution date: {execution_date}")
     formatted_date = execution_date.strftime("%Y%m%d")
+    logging.info(f"Execution date: {formatted_date}")
     url_stream = f"https://integrate.us.mixtelematics.com/api/geodata/assetmovements/{id_hp_mix}/{formatted_date}000000/{formatted_date}235959"
     headers = {"Authorization": f"Bearer {get_token_bearer()}"}
     response = get(url_stream, headers=headers)
@@ -212,7 +215,8 @@ Está configurada para realizar 3 tentativas em caso de algum erro sendo atribui
 """
 
 
-@dag(start_date=datetime(2024, 2, 26), schedule='15 12 * * *', catchup=True,
+
+@dag(start_date=datetime(2024, 2, 26), schedule='30 11 * * *', catchup=True,
      tags=['airbyte', 'HP', 'Mix-Telematics'])
 def pipeline_hp_telemetics():
     """

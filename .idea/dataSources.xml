@@ -8,5 +8,12 @@
       <jdbc-url>jdbc:postgresql://localhost:5440/poc-db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="artia@sian.db.artia.com" uuid="998a4347-0260-4fba-9018-81a2cd464e1f">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://sian.db.artia.com:3306/artia</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
