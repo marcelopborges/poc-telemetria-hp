@@ -186,14 +186,14 @@ def pipeline_hp_sianet():
         python_callable=get_token_sianet,
         provide_context=True,
         retries=5,
-        retry_delay=timedelta(minutes=5),
+        retry_delay=timedelta(minutes=10),
     )
     get_data_line = PythonOperator(
         task_id='get_data_line',
         python_callable=get_data_line_sianet,
         provide_context=True,
         retries=5,
-        retry_delay=timedelta(minutes=5),
+        retry_delay=timedelta(minutes=10),
     )
 
     insert_line = PythonOperator(
@@ -202,7 +202,7 @@ def pipeline_hp_sianet():
         provide_context=True,
         op_kwargs={'linha_data_json': "{{ ti.xcom_pull(task_ids='get_data_line') }}"},
         retries=5,
-        retry_delay=timedelta(minutes=5),
+        retry_delay=timedelta(minutes=10),
     )
 
     create_metadata_data_line = PythonOperator(
@@ -210,7 +210,7 @@ def pipeline_hp_sianet():
         python_callable=insert_dag_metadata_dados_linha,
         provide_context=True,
         retries=5,
-        retry_delay=timedelta(minutes=5)
+        retry_delay=timedelta(minutes=10)
     )
     end_task = PythonOperator(
         task_id='mark_end',

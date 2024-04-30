@@ -215,6 +215,7 @@ Está configurada para realizar 3 tentativas em caso de algum erro sendo atribui
 """
 
 
+
 @dag(start_date=datetime(2024, 2, 26), schedule='30 11 * * *', catchup=True,
      tags=['airbyte', 'HP', 'Mix-Telematics'])
 def pipeline_hp_telemetics():
