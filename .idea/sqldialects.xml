@@ -2,7 +2,6 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/airbyte/airbyte-integrations/bases/base-normalization/dbt-project-template-clickhouse" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/dbt/bkp/idle_route.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/postgres/sql/create_tables.sql" dialect="PostgreSQL" />
     <file url="PROJECT" dialect="PostgreSQL" />
   </component>
