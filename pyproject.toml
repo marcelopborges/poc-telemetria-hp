@@ -158,6 +158,7 @@ apache-airflow-providers-postgres = "^5.10.2"
 numpy = "^1.26.4"
 psycopg2 = "^2.9.9"
 haversine = "^2.8.1"
+python-dotenv = "^1.0.1"
 
 
 [tool.poetry.group.dev.dependencies]
