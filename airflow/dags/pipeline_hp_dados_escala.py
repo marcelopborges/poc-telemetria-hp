@@ -14,8 +14,7 @@ last_call_timestamp = None
 url_api_sianet = Variable.get("url_api_sianet")
 auth_token_basic_sianet = Variable.get("auth_token_basic_sianet")
 url_trip_made_sianet = Variable.get("url_trip_made_sianet")
-#apagar depois
-#http://siannet.gestaosian.com/api/ConsultaViagens?
+
 
 token_data = {
     "token": None,
