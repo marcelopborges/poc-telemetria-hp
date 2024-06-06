@@ -35,9 +35,9 @@
 > O processamento dos dados consiste na utilização do DBT que trata os dados em nível de banco e dados, gerando documentação de 
 > tudo o que é realiado.
 
-### 5.3 Desenvolvimento dos Dashboards
-> Criação de um dashboard no Power BI no qual será demonstrado as linhas, eventos e os dias como dimensões/métricas.
-> Envio de relatório com as ocorrências negativas por email.
+### 5.3 Desenvolvimento dos Dashboards/Relatórios
+> Disponibilização de dados para a área de operações para confecção de dashboards.
+> Envio de reports por email.
 
 ## 6. Resultados Esperados
 * Demonstração de como a telemetria pode oferecer insights para a otimização de rotas.
